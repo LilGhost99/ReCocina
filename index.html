@@ -204,6 +204,7 @@ ol.how li::before{content:counter(s);width:34px;height:34px;border-radius:50%;ba
 .tbl{width:100%;border-collapse:collapse}.tbl th{text-align:left;font-size:12.5px;color:var(--muted);text-transform:uppercase;padding:8px 6px;border-bottom:2.5px solid var(--ink)}.tbl td{padding:10px 6px;border-bottom:2px dashed var(--line);font-weight:600;vertical-align:middle}
 .simtag{display:inline-block;background:var(--rasp);color:#fff;font-weight:800;font-size:12px;border-radius:999px;padding:3px 11px;white-space:nowrap}
 .links{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.vtag{border:0;background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 0;text-align:center;opacity:.7}
 .links a{border:2.5px solid var(--green);border-radius:12px;padding:12px;font-weight:800;text-decoration:none;color:var(--green);background:var(--paper)}
 .cartbar{display:none}
 @media (max-width:1100px){.pos{grid-template-columns:1fr}.order{position:static}.cartbar{display:flex;position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;align-items:center;justify-content:space-between;gap:12px;background:var(--orange);color:#fff;border:3px solid var(--ink);border-radius:16px;padding:12px 16px;box-shadow:4px 4px 0 var(--ink);font-weight:800;text-decoration:none}.cartbar b{font-family:var(--display);font-size:28px}.screen.wide{padding-bottom:110px}}
@@ -231,7 +232,7 @@ body[data-r="caja"] .fab,body[data-r="cobrar"] .fab{display:none!important}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const KEY="recocina-app-v3", ONB="recocina-onb-v2";
+const KEY="recocina-app-v3", ONB="recocina-onb-v3";
 const WEIGHT={kg:1,L:1,pzas:0.15};
 const COLORS=["#3F7F16","#EE7A2C","#C22F52","#2FA3B5","#C98A00","#8A5A2B"];
 const CATALOG=[["Pollo","kg",2],["Carne","kg",3],["Pescado","kg",1],["Jitomate","kg",5],["Lechuga","pzas",4],["Cebolla","kg",10],
@@ -437,7 +438,9 @@ function vMas(){
      <div class="set"><div><b>Reiniciar demo</b><p>Regresa todo al estado inicial antes de presentar.</p></div><button class="btn" data-reset>Reiniciar</button></div>
      <div class="set"><div><b>Ver bienvenida</b><p>Muestra otra vez la introducción.</p></div><button class="btn" data-onb>Ver</button></div></div>
    <div class="card"><h3>Ir a</h3><div class="links"><a href="#/compras">Lista de compras</a><a href="#/ahorro">Ahorro en pesos</a><a href="#/facturas">Facturas</a><a href="#/residuos">Residuos</a><a href="#/huerto">Huerto</a><a href="#/menu">Menú del personal</a></div></div>
-   <div class="card t"><h3>Instalar en el iPad</h3><p class="sub" style="margin:0">En Safari toca Compartir y elige "Agregar a pantalla de inicio". ReCocina se abre en pantalla completa con su ícono.</p></div></div></div>`;
+   <div class="card t"><h3>Instalar en el iPad</h3><p class="sub" style="margin:0">En Safari toca Compartir y elige "Agregar a pantalla de inicio". ReCocina se abre en pantalla completa con su ícono.</p></div>
+   ${showDemo?`<div class="card r"><h3>Modo demostración</h3><div class="set"><div><b>Cocina en operación</b><p>Carga 2 semanas de trabajo: ventas, facturas, comida del personal, mermas y ahorro, como si la app ya se usara en un restaurante.</p></div><button class="btn r" data-demoload>Cargar</button></div></div>`:""}
+   <button class="vtag" data-vtap aria-label="Versión de la app">ReCocina v1.0 · Pachuca, Hgo.</button></div></div>`;
 }
 
 /* ================= PUNTO DE VENTA ================= */
@@ -477,6 +480,7 @@ function consume(n,q){
   return {cost,urgent,kg};
 }
 function bump(k,v){const t=S.daily[S.day]||(S.daily[S.day]={ventas:0,resc:0,perd:0,n:0});t[k]=(t[k]||0)+v}
+let showDemo=false,vtaps=0;
 let CART={},posCat="Todos",PAY={method:"efectivo",recv:""};
 const cartLines=()=>Object.entries(CART).filter(([,q])=>q>0).map(([id,q])=>{const d=DISHES.find(x=>x.id===id);return{d,q,price:dishPrice(d),resc:isRescate(d)}});
 const cartTotal=()=>cartLines().reduce((a,l)=>a+l.price*l.q,0);
@@ -596,7 +600,7 @@ function vFacturas(){
 }
 function vAhorro(){
   const days=Math.max(1,S.day),perDay=S.rescuedCost/days,ventasT=S.sales.reduce((a,s)=>a+s.total,0);
-  const rows=Object.entries(S.daily).sort((a,b)=>+a[0]-+b[0]);const mx=Math.max(1,...rows.map(([,v])=>Math.max(v.resc||0,v.perd||0)));
+  const rows=Object.entries(S.daily).sort((a,b)=>+a[0]-+b[0]).slice(-8);const mx=Math.max(1,...rows.map(([,v])=>Math.max(v.resc||0,v.perd||0)));
   return head("Ventas","Cuánto dinero rescata ReCocina, en pesos.")+subTabs("ahorro")+
   `<div class="grid g4"><div class="kpi k2"><div class="v">${money0(S.rescuedCost)}</div><div class="l">en comida rescatada</div></div><div class="kpi k3"><div class="v">${money0(S.tossedCost)}</div><div class="l">perdidos en vencidos</div></div>
    <div class="kpi k1"><div class="v">${money0(ventasT)}</div><div class="l">vendido en la demo</div></div><div class="kpi k4"><div class="v">${money0(perDay*26)}</div><div class="l">ahorro estimado al mes</div></div></div>
@@ -621,6 +625,52 @@ function vCompras(){
    <div class="grid" style="align-content:start"><div class="sumbox"><span>Costo estimado del pedido</span><b>${money(tot)}</b></div>
    <div class="card y"><h3>Cómo se calcula</h3><p class="sub" style="margin:0">Consumo promedio por día (ventas y comida del personal) × 2 días, menos lo que ya tienes. Lo que vence hoy o mañana <b>no cuenta</b>: primero hay que usarlo.</p></div>
    ${L.length?`<button class="btn g big" data-buyall>Registrar todo como entrada</button>`:""}</div></div>`;
+}
+/* ===== Modo demostración: cocina en operación ===== */
+function demoKitchen(){
+  let seedN=20261124;const rnd=()=>{seedN|=0;seedN=seedN+0x6D2B79F5|0;let t=Math.imul(seedN^seedN>>>15,1|seedN);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+  const pick=arr=>arr[Math.floor(rnd()*arr.length)];
+  const W=[["corrida",30],["tacos",16],["torta",10],["chila",11],["enfri",7],["huevos",6],["sopa",8],["arroz",5],["ensalada",5],["panajo",3],["agua",22],["cafe",9],["refresco",14]];
+  const wsum=W.reduce((a,w)=>a+w[1],0);
+  const pickDish=()=>{let r=rnd()*wsum;for(const [id,w] of W){r-=w;if(r<=0)return DISHES.find(d=>d.id===id)}return DISHES[0]};
+  const fmtT=m=>{const d=new Date(2026,0,1,Math.floor(m/60),m%60);return d.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})};
+  const CLIENTES=[["COMERCIALIZADORA DEL VALLE","CDV150312AB1","601"],["SERVICIOS INTEGRALES HIDALGO","SIH180725KL3","601"],["LOGISTICA PACHUCA NORTE","LPN200114QR8","601"],["MARIA FERNANDA RUIZ SOTO","RUSM900215H45","612"],["CARLOS ALBERTO MENDEZ LARA","MELC850930TR2","626"],["DESPACHO CONTABLE MINERAL","DCM170506PZ9","601"]];
+  const DAYS=14,TODAY=DAYS+1;
+  const st={day:TODAY,inv:[],nextId:1,rescued:0,tossed:7.9,meals:0,bins:{org:3.5,rec:1.5,no:0.8,oil:0.5},compost:46,
+    beds:[{name:"Lechuga",days:0,yield:6,unit:"pzas",shelf:5},{name:"Jitomate",days:2,yield:2,unit:"kg",shelf:5},{name:"Cilantro",days:0,yield:0.5,unit:"kg",shelf:4},{name:"Chile",days:5,yield:0.5,unit:"kg",shelf:10}],
+    log:[],sales:[],nextSale:1,nextFolio:1,rescuedCost:0,tossedCost:0,daily:{},usage:{}};
+  const logs=[];
+  for(let d=1;d<=TODAY;d++){
+    const isToday=d===TODAY,n=isToday?18:ri(38,58)+(d%7===6||d%7===0?12:0);
+    let ventas=0,resc=0;
+    const prog=(d-1)/(DAYS-1);
+    for(let k=0;k<n;k++){
+      const minute=isToday?ri(13*60,16*60+40):ri(8*60+30,21*60);
+      const lines={};const nl=ri(1,4);
+      for(let j=0;j<nl;j++){const dd=pickDish();lines[dd.id]=(lines[dd.id]||0)+(rnd()<0.2?2:1)}
+      const rescChance=0.12+0.18*prog;
+      const L=Object.entries(lines).map(([id,q])=>{const dd=DISHES.find(x=>x.id===id),r=Object.keys(dd.ings).length&&rnd()<rescChance;return{id,name:dd.name,price:r?Math.round(dd.price*(1-RESCATE)):dd.price,q,resc:!!r,full:dd.price}});
+      const total=L.reduce((a,l)=>a+l.price*l.q,0),full=L.reduce((a,l)=>a+l.full*l.q,0);
+      const r=rnd(),method=r<0.55?"efectivo":r<0.85?"tarjeta":"transferencia";
+      const recv=method==="efectivo"?([50,100,200,500,1000].find(b=>b>=total)||total):total;
+      const rescV=L.filter(l=>l.resc).reduce((a,l)=>a+l.full*l.q*0.3,0);
+      L.forEach(l=>{const dd=DISHES.find(x=>x.id===l.id);for(const [nm,qq] of Object.entries(dd.ings))st.usage[nm]=(st.usage[nm]||0)+qq*l.q});
+      st.sales.push({id:0,day:d,time:fmtT(minute),_m:minute,lines:L.map(({full,...x})=>x),full,total,method,recv,rescued:rescV,factura:null});
+      ventas+=total;resc+=rescV;
+    }
+    const staff=isToday?0:(rnd()<0.85?(rnd()<0.4?2:1):0);
+    const staffV=staff*ri(55,120);resc+=staffV;st.meals+=staff;
+    const perd=isToday?0:Math.max(60,Math.round(560-330*prog+ri(-60,60)));
+    st.daily[d]={ventas,resc,perd,n};st.rescuedCost+=resc;st.tossedCost+=perd;st.rescued+=resc/38;
+    if(!isToday){logs.push({d,t:`Cierre de caja: ${n} ventas por ${money(ventas)}.`});if(staff)logs.push({d,t:`Comida del personal con ingredientes por vencer: ${money(staffV)} rescatados.`});if(perd>350)logs.push({d,t:`Se vencieron productos por ${money(perd)} y fueron a la composta.`})}
+  }
+  st.sales.sort((a,b)=>a.day-b.day||a._m-b._m).forEach(s=>{s.id=st.nextSale++;delete s._m});
+  st.sales.forEach(s=>{if(s.total>=180&&rnd()<0.22){const c=pick(CLIENTES);s.factura={rfc:c[1],name:c[0],cp:String(ri(42000,42190)),reg:c[2],uso:c[2]==="601"?"G03":pick(["G03","S01"]),mail:"",uuid:uuid(),folio:st.nextFolio++,day:s.day,time:s.time}}});
+  const inv=[["Pollo",4.5,"kg",1],["Pollo",6,"kg",2],["Tortillas",3,"kg",1],["Tortillas",5,"kg",2],["Pan",14,"pzas",0],["Pan",24,"pzas",2],["Jitomate",5.5,"kg",2],["Jitomate",3,"kg",5],["Cebolla",4,"kg",9],["Lechuga",3,"pzas",1],["Lechuga",6,"pzas",4],["Zanahoria",3,"kg",6],["Calabacita",2.5,"kg",1],["Calabacita",2,"kg",4],["Queso",1.5,"kg",7],["Crema",2,"L",3],["Huevo",30,"pzas",12],["Arroz",8,"kg",80],["Frijol",6,"kg",85],["Aguacate",6,"pzas",2],["Carne",2,"kg",0],["Leche",4,"L",4]];
+  inv.forEach(([name,qty,unit,days])=>st.inv.push({id:st.nextId++,name,qty,unit,days}));
+  st.log=[{d:TODAY,t:"Abre la cocina. Hay productos que vencen hoy: el rescate del día ya está en la caja."},...logs.reverse()].slice(0,30);
+  return st;
 }
 
 let lastRender=null;
@@ -684,7 +734,7 @@ document.addEventListener("click",e=>{
   if(d.compost!==undefined){if(S.compost<20)return;S.compost-=20;S.beds.forEach(b=>{if(b.days>1)b.days-=1});addLog("Se usó abono de la composta en el huerto.");save();route();toast("Abono aplicado: el huerto crece más rápido.");return}
   if(d.nextday!==undefined){S.day+=1;const exp=[];S.inv.forEach(i=>{i.days-=1;if(i.days===-1)exp.push(i.name)});S.beds.forEach(b=>{if(b.days>0)b.days-=1});
     addLog(exp.length?`Empieza el día. Se vencieron: ${exp.join(", ")}.`:"Empieza un nuevo día.");save();route();toast(exp.length?`Se vencieron: ${exp.join(", ")}. Revisa el inventario.`:`Día ${S.day}. Revisa las alertas.`);return}
-  if(d.reset!==undefined){S=seed();F=blankF();CART={};PAY={method:"efectivo",recv:""};invFilter="todos";invQuery="";save();toast("Demo reiniciada.");go("#/inicio");return}
+  if(d.reset!==undefined){S=seed();F=blankF();CART={};PAY={method:"efectivo",recv:""};invFilter="todos";invQuery="";save();try{localStorage.removeItem(ONB)}catch(e){}go("#/inicio");showOnb(0);return}
   if(d.cat){posCat=d.cat;route();return}
   if(d.add){const dd=DISHES.find(x=>x.id===d.add);if(!dd)return;if((CART[dd.id]||0)>=avail(dd)){toast("Ya no alcanzan los ingredientes para otro.");return}CART[dd.id]=(CART[dd.id]||0)+1;route();return}
   if(d.cq){const dd=DISHES.find(x=>x.id===d.cq);const nv=(CART[d.cq]||0)+(+d.v);if(+d.v>0&&nv>avail(dd)){toast("Ya no alcanzan los ingredientes para otro.");return}CART[d.cq]=Math.max(0,nv);route();return}
@@ -707,6 +757,8 @@ document.addEventListener("click",e=>{
   if(d.buy||d.buyall!==undefined){const L=comprasList().filter(x=>d.buyall!==undefined||x.n===d.buy);
     L.forEach(x=>{const c=CATALOG.find(k=>k[0]===x.n);S.inv.push({id:S.nextId++,name:x.n,qty:x.buy,unit:x.unit,days:c?c[2]:7})});
     if(L.length){addLog(`Llegó el pedido: ${L.map(x=>x.n.toLowerCase()).join(", ")}.`);save();route();toast(L.length>1?"Pedido registrado en el inventario.":`${L[0].n} registrado en el inventario.`)}return}
+  if(d.vtap!==undefined){vtaps++;if(vtaps>=5&&!showDemo){showDemo=true;route();toast("Modo demostración activado.")}return}
+  if(d.demoload!==undefined){S=demoKitchen();CART={};PAY={method:"efectivo",recv:""};posCat="Todos";invFilter="todos";invQuery="";showDemo=false;vtaps=0;save();toast("Cocina en operación: día 15 cargado.");go("#/inicio");return}
   if(d.onb!==undefined){showOnb(0);return}
 });
 
@@ -715,6 +767,7 @@ const tapeSvg=(y,r,t,c,w)=>`<g transform="rotate(${r} 110 ${y+17})"><rect x="30"
 const ONB_SLIDES=[
  {t:"Bienvenido a ReCocina",p:"La app que ayuda a tu restaurante a dejar de tirar comida y dinero.",ill:LOGO_SVG},
  {t:"Sabe qué vence",p:"Registra lo que llega y ReCocina te avisa con colores qué hay que usar primero.",ill:`<svg class="ill" viewBox="0 0 220 170">${tapeSvg(16,-3,"Pollo","#C22F52",60)}${tapeSvg(70,2,"Jitomate","#EE7A2C",40)}${tapeSvg(124,-1,"Arroz","#3F7F16",30)}</svg>`},
+ {t:"Vende y factura",p:"La caja cobra, factura y descuenta sola los ingredientes. Lo que está por vencer sale como rescate del día.",ill:`<svg class="ill" viewBox="0 0 220 170"><rect x="60" y="14" width="100" height="142" rx="6" fill="#fff" stroke="#233611" stroke-width="4"/><path d="M76 40h68M76 58h50M76 76h60M76 94h40" stroke="#C9CFB0" stroke-width="6" stroke-linecap="round"/><rect x="76" y="114" width="68" height="22" rx="4" fill="#3F7F16"/><circle cx="168" cy="40" r="26" fill="#C22F52" stroke="#233611" stroke-width="4"/><text x="168" y="47" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="20" fill="#FFF8D6">-25%</text></svg>`},
  {t:"Cocina y cierra el ciclo",p:"Usa lo que vence en el menú del personal. Lo que sobra va a la composta y regresa como cosecha.",ill:`<svg class="ill" viewBox="0 0 220 170"><circle cx="110" cy="85" r="62" fill="none" stroke="#EE7A2C" stroke-width="12" stroke-dasharray="340 50" transform="rotate(-80 110 85)"/><circle cx="110" cy="85" r="38" fill="#fff" stroke="#233611" stroke-width="4"/><ellipse cx="98" cy="82" rx="13" ry="8" fill="#F1D18A" stroke="#233611" stroke-width="2"/><ellipse cx="122" cy="82" rx="13" ry="8" fill="#F1D18A" stroke="#233611" stroke-width="2"/><circle cx="110" cy="98" r="6" fill="#8CC152" stroke="#233611" stroke-width="2"/></svg>`}];
 function showOnb(n){
   const s=ONB_SLIDES[n],last=n===ONB_SLIDES.length-1;
